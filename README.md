@@ -2,13 +2,15 @@
 
 > **Full code documentation:** see [DOCUMENTATION.md](./DOCUMENTATION.md) for every file, function, and logic flow.
 
+> **Form configuration guide:** see [FORM_CONFIG_GUIDE.md](./FORM_CONFIG_GUIDE.md) for step-by-step instructions on manually creating the JSON.
+
 A demo project showcasing **metadata-driven dynamic form rendering**. Form structure, validation rules, conditional visibility, and API-driven dropdowns are stored in PostgreSQL and rendered at runtime — no frontend code changes needed when fields are added or hidden.
 
 ## Tech Stack
 
 | Layer    | Technologies                                      |
 |----------|---------------------------------------------------|
-| Frontend | React, TypeScript, React Hook Form, Axios, React Router, CSS |
+| Frontend | React, JavaScript, React Hook Form, Axios, React Router, CSS |
 | Backend  | Node.js, Express.js, TypeScript, pg               |
 | Database | PostgreSQL                                        |
 
@@ -53,8 +55,7 @@ field-loader/
 │       ├── components/      # FormRenderer, DynamicField, DynamicSection
 │       ├── pages/           # MakePayment
 │       ├── services/        # API client
-│       ├── types/           # TypeScript interfaces
-│       └── utils/           # Visibility + validation helpers
+│       ├── utils/           # Visibility + validation helpers (JSDoc documented)
 └── docker-compose.yml       # PostgreSQL
 ```
 
@@ -95,9 +96,9 @@ Visit [http://localhost:5173](http://localhost:5173), select **Product**, **Chan
 
 | Product | Channel | Sub-Channel | Notable differences        |
 |---------|---------|-----------|----------------------------|
-| PAYMENT | WEB     | PREMIUM   | Premium Benefits section   |
-| PAYMENT | WEB     | STANDARD  | Full web form              |
-| PAYMENT | MOBILE  | STANDARD  | Simplified mobile form     |
+| SUPER_PROTECT_PLUS_PLAN | banca | zopper | Banca Details section |
+| MAGIC_SAVINGS_PLAN | dst | policy-bazaar | Partner Portal Benefits |
+| WEALTH_GAIN_INSURANCE_PLAN | corporate | policy-bazaar | Corporate + Partner Portal |
 
 ## API Endpoints
 
@@ -110,16 +111,16 @@ Visit [http://localhost:5173](http://localhost:5173), select **Product**, **Chan
 ### Form Configuration Query Params
 
 ```
-GET /api/form-configurations?product_code=PAYMENT&channel_code=WEB&sub_channel_code=PREMIUM
+GET /api/form-configurations?product_code=SUPER_PROTECT_PLUS_PLAN&channel_code=banca&sub_channel_code=zopper
 ```
 
 ### Form Submission Body
 
 ```json
 {
-  "product_code": "PAYMENT",
-  "channel_code": "WEB",
-  "sub_channel_code": "PREMIUM",
+  "product_code": "SUPER_PROTECT_PLUS_PLAN",
+  "channel_code": "banca",
+  "sub_channel_code": "zopper",
   "form_data": {
     "customer_name": "Jane Doe",
     "payment_method": "card",
@@ -139,7 +140,7 @@ Form metadata is stored as JSONB in `form_configurations.configuration`:
     {
       "id": "payment_details",
       "label": "Payment Details",
-      "visibleWhen": { "field": "_sub_channel_code", "operator": "equals", "value": "PREMIUM" },
+      "visibleWhen": { "field": "_sub_channel_code", "operator": "equals", "value": "policy-bazaar" },
       "fields": [
         {
           "id": "payment_method",
@@ -209,10 +210,10 @@ SET configuration = jsonb_set(
   '{sections,0,fields}',
   (configuration->'sections'->0->'fields') || '[{"id":"loyalty_id","type":"text","label":"Loyalty ID","placeholder":"Optional"}]'::jsonb
 )
-WHERE product_code = 'PAYMENT' AND channel_code = 'WEB' AND sub_channel_code = 'STANDARD';
+WHERE product_code = 'SUPER_PROTECT_PLUS_PLAN' AND channel_code = 'banca' AND sub_channel_code = 'zopper';
 ```
 
-2. Reload the form for **WEB / STANDARD** — the new field appears automatically.
+2. Reload the form for **banca / zopper** — the new field appears automatically.
 
 ## Environment Variables
 

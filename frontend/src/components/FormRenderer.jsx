@@ -1,38 +1,33 @@
 import { useForm } from 'react-hook-form';
 import { DynamicSection } from './DynamicSection';
-import type {
-  FormConfiguration,
-  FormContextMeta,
-  FormValues,
-} from '../types/form';
 import { getDefaultValues } from '../utils/formUtils';
 
-interface FormRendererProps {
-  configuration: FormConfiguration;
-  contextMeta: FormContextMeta;
-  onSubmit: (data: FormValues) => Promise<void>;
-  submitting?: boolean;
-}
-
+/**
+ * Top-level dynamic form renderer with 2-column card grid layout.
+ */
 export function FormRenderer({
   configuration,
   contextMeta,
   onSubmit,
   submitting = false,
-}: FormRendererProps) {
+}) {
   const {
     register,
     control,
     handleSubmit,
+    unregister,
+    clearErrors,
     formState: { errors },
-  } = useForm<FormValues>({
+  } = useForm({
     defaultValues: getDefaultValues(configuration.sections),
-    mode: 'onBlur',
+    mode: 'onTouched',
+    reValidateMode: 'onChange',
+    shouldUnregister: true,
   });
 
   return (
     <form
-      className="dynamic-form"
+      className="form-container dynamic-form"
       onSubmit={handleSubmit(onSubmit)}
       noValidate
     >
@@ -42,10 +37,8 @@ export function FormRenderer({
           <p className="form-description">{configuration.description}</p>
         )}
         <div className="proposal-meta">
-          <span>
-            {contextMeta.product_code} / {contextMeta.channel_code} /{' '}
-            {contextMeta.sub_channel_code}
-          </span>
+          {contextMeta.product_code} / {contextMeta.channel_code} /{' '}
+          {contextMeta.sub_channel_code}
         </div>
       </header>
 
@@ -56,13 +49,15 @@ export function FormRenderer({
           register={register}
           control={control}
           errors={errors}
+          unregister={unregister}
+          clearErrors={clearErrors}
           contextMeta={contextMeta}
         />
       ))}
 
       <div className="form-actions">
         <button type="submit" className="btn-primary" disabled={submitting}>
-          {submitting ? 'Submitting...' : 'Submit Payment'}
+          {submitting ? 'Submitting...' : 'Submit Proposal'}
         </button>
       </div>
     </form>

@@ -25,7 +25,7 @@ This document describes **every file, function, and major logic flow** in the Fi
 │  MakePayment ──► FormRenderer ──► DynamicSection ──► DynamicField
 │       │              │                  │                  │    │
 │       │              └── formUtils (visibility, validation)     │
-│       └── api.ts (2 HTTP calls total per session)               │
+│       └── api.js (2 HTTP calls total per session)               │
 └────────────────────────────┬────────────────────────────────────┘
                              │ GET  /api/form-configurations
                              │ POST /api/form-submissions
@@ -47,8 +47,8 @@ This document describes **every file, function, and major logic flow** in the Fi
 
 ### Phase 1 — User selects Product / Channel / Sub-Channel
 
-1. User picks values from static dropdowns in `MakePayment.tsx`.
-2. Options come from `selectionOptions.ts` (frontend-only, not from API).
+1. User picks values from static dropdowns in `MakePayment.jsx`.
+2. Options come from `selectionOptions.js` (frontend-only, not from API).
 3. Changing any selector resets the loaded form config.
 
 ### Phase 2 — Load Form (1 API call)
@@ -257,7 +257,7 @@ Express application entry point.
 
 ## 5. Frontend
 
-### File: `frontend/vite.config.ts`
+### File: `frontend/vite.config.js`
 
 Vite dev server configuration.
 
@@ -268,7 +268,7 @@ Vite dev server configuration.
 
 ---
 
-### File: `frontend/src/main.tsx`
+### File: `frontend/src/main.jsx`
 
 React application bootstrap.
 
@@ -278,7 +278,7 @@ React application bootstrap.
 
 ---
 
-### File: `frontend/src/App.tsx`
+### File: `frontend/src/App.jsx`
 
 Root component. Layout shell only.
 
@@ -289,15 +289,15 @@ Root component. Layout shell only.
 
 ---
 
-### File: `frontend/src/config/selectionOptions.ts`
+### File: `frontend/src/config/selectionOptions.js`
 
 **Static frontend data** for Product / Channel / Sub-Channel dropdowns. Not fetched from API.
 
 | Export | Description |
 |--------|-------------|
-| `PRODUCT_OPTIONS` | `[{ label: 'Payment', value: 'PAYMENT' }, { label: 'Loan', value: 'LOAN' }]` |
-| `CHANNEL_OPTIONS` | Map of product → channel list. Currently only `PAYMENT` → WEB, MOBILE |
-| `SUB_CHANNEL_OPTIONS` | Map of channel → sub-channel list. WEB → STANDARD, PREMIUM; MOBILE → STANDARD |
+| `PRODUCT_OPTIONS` | 9 insurance plans (e.g. `SUPER_PROTECT_PLUS_PLAN`) |
+| `CHANNEL_OPTIONS` | Shared across products: banca, agency, dst, broker, corporate, vakrangee |
+| `SUB_CHANNEL_OPTIONS` | Shared across channels: zopper, insurance-dekho, policy-bazaar |
 
 **Cascading logic (in MakePayment):**
 - Select product → enables channel dropdown
@@ -308,17 +308,9 @@ Root component. Layout shell only.
 
 ### File: `frontend/src/types/form.ts`
 
-Frontend TypeScript types. Mirrors backend `FormConfiguration` shape plus:
+_Removed — frontend is plain JavaScript. Types are documented via JSDoc `@param` / `@returns` in each module._
 
-| Type | Description |
-|------|-------------|
-| `FormConfigurationResponse` | API response wrapper with DB row fields + nested `configuration` |
-| `FormValues` | `Record<string, unknown>` — all form field values |
-| `FormContextMeta` | `{ product_code, channel_code, sub_channel_code }` — injected into visibility evaluation |
-
----
-
-### File: `frontend/src/services/api.ts`
+### File: `frontend/src/services/api.js`
 
 Axios HTTP client. Only 2 functions — minimal API surface.
 
@@ -337,9 +329,9 @@ Axios HTTP client. Only 2 functions — minimal API surface.
 
 ---
 
-### File: `frontend/src/utils/formUtils.ts`
+### File: `frontend/src/utils/formUtils.js`
 
-Core client-side form logic. No React dependencies.
+Core client-side form logic. No React dependencies. All functions include JSDoc inline documentation.
 
 #### `isEmpty(value)` — private helper
 
@@ -367,7 +359,7 @@ Determines if a section or field should be shown.
 | `isNotEmpty` | Field has a value |
 | default | `true` |
 
-**Context fields:** `DynamicField` and `DynamicSection` inject `_product_code`, `_channel_code`, `_sub_channel_code` into `formValues` so rules like `{ field: "_sub_channel_code", operator: "equals", value: "PREMIUM" }` work.
+**Context fields:** `DynamicField` and `DynamicSection` inject `_product_code`, `_channel_code`, `_sub_channel_code` into `formValues` so rules like `{ field: "_sub_channel_code", "operator": "equals", "value": "policy-bazaar" }` work.
 
 #### `buildValidationRules(validation, isVisible): Record<string, unknown>`
 
@@ -404,7 +396,7 @@ Resolves dropdown/radio options **entirely on the client**.
 
 ---
 
-### File: `frontend/src/pages/MakePayment.tsx`
+### File: `frontend/src/pages/MakePayment.jsx`
 
 Main page component. Orchestrates selection → load → render → submit.
 
@@ -447,7 +439,7 @@ default  → Show selector card + (if ready) FormRenderer below
 
 ---
 
-### File: `frontend/src/components/FormRenderer.tsx`
+### File: `frontend/src/components/FormRenderer.jsx`
 
 Renders the dynamic form from configuration JSON.
 
@@ -475,7 +467,7 @@ Renders the dynamic form from configuration JSON.
 
 ---
 
-### File: `frontend/src/components/DynamicSection.tsx`
+### File: `frontend/src/components/DynamicSection.jsx`
 
 Renders one section (fieldset) from config.
 
@@ -496,7 +488,7 @@ Same pattern as FormRenderer children: `section`, `register`, `control`, `errors
 
 ---
 
-### File: `frontend/src/components/DynamicField.tsx`
+### File: `frontend/src/components/DynamicField.jsx`
 
 Renders a single form field based on `field.type`.
 
@@ -691,14 +683,13 @@ Changing Product/Channel/Sub-Channel resets to `idle` and clears loaded config.
 | `backend/src/routes/formRoutes.ts` | URL → handler mapping |
 | `backend/src/db/schema.sql` | Table definitions |
 | `backend/src/db/init.ts` | Seed script (demo data only) |
-| `frontend/src/main.tsx` | React bootstrap |
-| `frontend/src/App.tsx` | App shell + routing |
-| `frontend/src/pages/MakePayment.tsx` | Main page + state machine |
-| `frontend/src/components/FormRenderer.tsx` | Form wrapper + React Hook Form |
-| `frontend/src/components/DynamicSection.tsx` | Section renderer |
-| `frontend/src/components/DynamicField.tsx` | Field renderer |
-| `frontend/src/services/api.ts` | HTTP client (2 functions) |
-| `frontend/src/utils/formUtils.ts` | Visibility, validation, options logic |
-| `frontend/src/types/form.ts` | Frontend TypeScript interfaces |
-| `frontend/src/config/selectionOptions.ts` | Static P/C/SC dropdown data |
-| `frontend/vite.config.ts` | Dev server + API proxy |
+| `frontend/src/main.jsx` | React bootstrap |
+| `frontend/src/App.jsx` | App shell + routing |
+| `frontend/src/pages/MakePayment.jsx` | Main page + state machine |
+| `frontend/src/components/FormRenderer.jsx` | Form wrapper + React Hook Form |
+| `frontend/src/components/DynamicSection.jsx` | Section renderer |
+| `frontend/src/components/DynamicField.jsx` | Field renderer |
+| `frontend/src/services/api.js` | HTTP client (2 functions) |
+| `frontend/src/utils/formUtils.js` | Visibility, validation, options logic |
+| `frontend/src/config/selectionOptions.js` | Static P/C/SC dropdown data |
+| `frontend/vite.config.js` | Dev server + API proxy |

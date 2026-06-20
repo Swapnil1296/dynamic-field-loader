@@ -1,37 +1,61 @@
 import axios from 'axios';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FormRenderer } from '../components/FormRenderer';
 import { fetchFormConfiguration, submitFormData } from '../services/api';
 import {
-  CHANNEL_OPTIONS,
+  getChannelOptions,
+  getSubChannelOptions,
+  isValidCombination,
   PRODUCT_OPTIONS,
-  SUB_CHANNEL_OPTIONS,
 } from '../config/selectionOptions';
-import type { FormConfigurationResponse, FormValues } from '../types/form';
 
-type PageState = 'idle' | 'loading' | 'ready' | 'success' | 'error';
-
+/**
+ * Main page: Product / Channel / Sub-Channel selection and dynamic form.
+ */
 export function MakePayment() {
   const [productCode, setProductCode] = useState('');
   const [channelCode, setChannelCode] = useState('');
   const [subChannelCode, setSubChannelCode] = useState('');
-  const [state, setState] = useState<PageState>('idle');
-  const [error, setError] = useState<string | null>(null);
-  const [formConfig, setFormConfig] = useState<FormConfigurationResponse | null>(
-    null
-  );
+  const [state, setState] = useState('idle');
+  const [error, setError] = useState(null);
+  const [formConfig, setFormConfig] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  const [submissionResult, setSubmissionResult] = useState<{
-    id: number;
-    created_at: string;
-  } | null>(null);
+  const [submissionResult, setSubmissionResult] = useState(null);
 
-  const channelOptions = productCode ? CHANNEL_OPTIONS[productCode] ?? [] : [];
-  const subChannelOptions = channelCode
-    ? SUB_CHANNEL_OPTIONS[channelCode] ?? []
-    : [];
+  const channelOptions = getChannelOptions(productCode);
+  const subChannelOptions = getSubChannelOptions(channelCode);
 
-  const handleProductChange = (value: string) => {
+  // Clear stale values left over from hot-reload (e.g. old LOAN / WEB / PREMIUM)
+  useEffect(() => {
+    if (productCode && !PRODUCT_OPTIONS.some((p) => p.value === productCode)) {
+      setProductCode('');
+      setChannelCode('');
+      setSubChannelCode('');
+      setFormConfig(null);
+      setState('idle');
+      return;
+    }
+    if (
+      channelCode &&
+      !channelOptions.some((c) => c.value === channelCode)
+    ) {
+      setChannelCode('');
+      setSubChannelCode('');
+      setFormConfig(null);
+      setState('idle');
+      return;
+    }
+    if (
+      subChannelCode &&
+      !subChannelOptions.some((s) => s.value === subChannelCode)
+    ) {
+      setSubChannelCode('');
+      setFormConfig(null);
+      setState('idle');
+    }
+  }, [productCode, channelCode, subChannelCode, channelOptions, subChannelOptions]);
+
+  const handleProductChange = (value) => {
     setProductCode(value);
     setChannelCode('');
     setSubChannelCode('');
@@ -39,14 +63,14 @@ export function MakePayment() {
     setState('idle');
   };
 
-  const handleChannelChange = (value: string) => {
+  const handleChannelChange = (value) => {
     setChannelCode(value);
     setSubChannelCode('');
     setFormConfig(null);
     setState('idle');
   };
 
-  const handleSubChannelChange = (value: string) => {
+  const handleSubChannelChange = (value) => {
     setSubChannelCode(value);
     setFormConfig(null);
     setState('idle');
@@ -55,6 +79,14 @@ export function MakePayment() {
   const handleLoadForm = async () => {
     if (!productCode || !channelCode || !subChannelCode) {
       setError('Please select product, channel, and sub-channel');
+      setState('error');
+      return;
+    }
+
+    if (!isValidCombination(productCode, channelCode, subChannelCode)) {
+      setError(
+        'Invalid selection. Please re-select product, channel, and sub-channel.'
+      );
       setState('error');
       return;
     }
@@ -82,7 +114,7 @@ export function MakePayment() {
     }
   };
 
-  const handleSubmit = async (data: FormValues) => {
+  const handleSubmit = async (data) => {
     setSubmitting(true);
     try {
       const result = await submitFormData({
@@ -108,7 +140,7 @@ export function MakePayment() {
     return (
       <div className="page-container">
         <div className="status-card success">
-          <h2>Payment Submitted</h2>
+          <h2>Proposal Submitted</h2>
           <p>Your form has been submitted successfully.</p>
           <dl className="result-details">
             <dt>Submission ID</dt>
@@ -127,23 +159,22 @@ export function MakePayment() {
 
   return (
     <div className="page-container">
-      <div className="selector-card">
-        <h1>Make Payment</h1>
-        <p className="selector-description">
-          Select product, channel, and sub-channel. The backend returns field
-          visibility and layout once — the form then renders entirely on the
-          client.
-        </p>
+      <div className="form-container form-container--selector">
+        <div className="page-title">
+          <h1>Customer Details</h1>
+          <p>
+            Select product, channel, and sub-channel to load the proposal form.
+          </p>
+        </div>
 
-        <div className="selector-grid">
-          <div className="form-field">
-            <label htmlFor="product" className="form-label">
-              Product
-            </label>
+        <div className="field-card">
+          <label htmlFor="product">Product</label>
+          <div className="field-value field-value--select">
             <select
               id="product"
-              className="form-input"
+              className="field-select"
               value={productCode}
+              autoComplete="off"
               onChange={(e) => handleProductChange(e.target.value)}
             >
               <option value="">Select product...</option>
@@ -153,16 +184,20 @@ export function MakePayment() {
                 </option>
               ))}
             </select>
+            <span className="dropdown-icon" aria-hidden="true">
+              ⌄
+            </span>
           </div>
+        </div>
 
-          <div className="form-field">
-            <label htmlFor="channel" className="form-label">
-              Channel
-            </label>
+        <div className="field-card">
+          <label htmlFor="channel">Channel</label>
+          <div className="field-value field-value--select">
             <select
               id="channel"
-              className="form-input"
+              className="field-select"
               value={channelCode}
+              autoComplete="off"
               onChange={(e) => handleChannelChange(e.target.value)}
               disabled={!productCode}
             >
@@ -173,16 +208,20 @@ export function MakePayment() {
                 </option>
               ))}
             </select>
+            <span className="dropdown-icon" aria-hidden="true">
+              ⌄
+            </span>
           </div>
+        </div>
 
-          <div className="form-field">
-            <label htmlFor="subChannel" className="form-label">
-              Sub-Channel
-            </label>
+        <div className="field-card">
+          <label htmlFor="subChannel">Sub-Channel</label>
+          <div className="field-value field-value--select">
             <select
               id="subChannel"
-              className="form-input"
+              className="field-select"
               value={subChannelCode}
+              autoComplete="off"
               onChange={(e) => handleSubChannelChange(e.target.value)}
               disabled={!channelCode}
             >
@@ -193,14 +232,19 @@ export function MakePayment() {
                 </option>
               ))}
             </select>
+            <span className="dropdown-icon" aria-hidden="true">
+              ⌄
+            </span>
           </div>
         </div>
 
         <button
           type="button"
-          className="btn-primary"
+          className="btn-primary btn-load"
           onClick={handleLoadForm}
-          disabled={!productCode || !channelCode || !subChannelCode || state === 'loading'}
+          disabled={
+            !productCode || !channelCode || !subChannelCode || state === 'loading'
+          }
         >
           {state === 'loading' ? 'Loading configuration...' : 'Load Form'}
         </button>
@@ -212,6 +256,7 @@ export function MakePayment() {
 
       {state === 'ready' && formConfig && (
         <FormRenderer
+          key={`${productCode}-${channelCode}-${subChannelCode}`}
           configuration={formConfig.configuration}
           contextMeta={{
             product_code: productCode,

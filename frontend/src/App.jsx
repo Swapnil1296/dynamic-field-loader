@@ -2,6 +2,12 @@ import { Route, Routes, Link } from 'react-router-dom';
 import { MakePayment } from './pages/MakePayment';
 import './App.css';
 
+/**
+ * Root layout component.
+ * Renders the top navigation and routes all paths to the MakePayment page.
+ *
+ * @returns {import('react').ReactElement}
+ */
 function App() {
   return (
     <div className="app">
