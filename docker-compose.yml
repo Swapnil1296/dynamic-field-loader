@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: field-loader-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: field_loader
+    ports:
+      - '5432:5432'
+    volumes:
+      - field_loader_data:/var/lib/postgresql/data
+
+volumes:
+  field_loader_data:
