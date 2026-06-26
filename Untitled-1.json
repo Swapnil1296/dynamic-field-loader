@@ -1,0 +1,208 @@
+{
+  "title": "Make Payment",
+  "description": "Please review your \"Quote / Premium Calculation Summary\" below and select your payment option",
+  "disclaimer": "Premium and Basic Sum Assured may change based on the assessment of your application",
+  "total_payment_amount": "Total amount payable at the time of policy issuance",
+  "sections": [
+    {
+      "id": "quote_summary",
+      "label": "Quote Summary",
+      "fields": [
+        {
+          "id": "iQuote_number",
+          "type": "text",
+          "label": "iQuote number",
+          "validation": {
+            "required": true,
+            "minLength": 10
+          }
+        },
+        {
+          "id": "proposal_number",
+          "type": "text",
+          "label": "Proposal Number",
+          "validation": {
+            "required": true,
+            "maxLength": 10,
+            "minLength": 10
+          }
+        },
+        {
+          "id": "name_of_policy",
+          "type": "text",
+          "label": "Name of Policy",
+          "validation": {
+            "required": true,
+            "minLength": 10
+          }
+        },
+        {
+          "id": "full_name",
+          "type": "text",
+          "label": "Full Name",
+          "validation": {
+            "required": true
+          }
+        }
+      ]
+    },
+    
+    {
+      "id": "policy_details",
+      "label": "Policy Details",
+      "fields": [
+        {
+          "id": "sum_assured",
+          "type": "number",
+          "label": "Sum Assured",
+          "validation": {
+            "min": 100000,
+            "required": true
+          }
+        },
+        {
+          "id": "premium_amount",
+          "type": "number",
+          "label": "Premium Amount",
+          "validation": {
+            "min": 1,
+            "required": true
+          }
+        },
+        {
+          "id": "payment_method",
+          "type": "radio",
+          "label": "Payment Method",
+          "options": [
+            {
+              "label": "Online Payment",
+              "value": "online_payment"
+            },
+            {
+              "label": "Bima Asba",
+              "value": "bima_asba"
+            },  
+            {
+              "label": "Cheque",
+              "value": "cheque"
+            },
+            {
+              "label": "Direct Debit",
+              "value": "direct_debit"
+            }, {
+              "label": "Demand Draft",
+              "value": "demand_draft"
+            }
+          ],
+          "validation": {
+            "required": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "policy_details",
+      "label": "Policy Details",
+      "fields": [
+        {
+          "id": "sum_assured",
+          "type": "number",
+          "label": "Sum Assured",
+          "validation": {
+            "min": 100000,
+            "required": true
+          }
+        },
+        {
+          "id": "premium_amount",
+          "type": "number",
+          "label": "Premium Amount",
+          "validation": {
+            "min": 1,
+            "required": true
+          }
+        },
+        {
+          "id": "payment_method",
+          "type": "select",
+          "label": "Payment Method",
+          "options": [
+            {
+              "label": "Online Payment",
+              "value": "online_payment"
+            },
+            {
+              "label": "Bima Asba",
+              "value": "bima_asba"
+            },  
+            {
+              "label": "Cheque",
+              "value": "cheque"
+            },
+            {
+              "label": "Direct Debit",
+              "value": "direct_debit"
+            }, {
+              "label": "Demand Draft",
+              "value": "demand_draft"
+            }
+          ],
+          "validation": {
+            "required": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "e_mandate_section",
+      "label": "Select E-Mandate Registration Mode",
+      "fields": [
+        {
+          "id": "e_mandate_registration_mode",
+          "type": "radio",
+          "label": "Registration Mode",
+          "validation": { "required": true },
+          "options": [
+            { "label": "E-Mandate", "value": "e_mandate" },
+            { "label": "Physical Mandate", "value": "physical_mandate" }
+          ]
+        },
+        {
+          "id": "emandate_bank_account",
+          "type": "text",
+          "label": "Bank Account Number",
+          "visibleWhen": {
+            "field": "e_mandate_registration_mode",
+            "operator": "equals",
+            "value": "e_mandate"
+          },
+          "validation": { "required": true }
+        },
+        {
+          "id": "emandate_ifsc",
+          "type": "text",
+          "label": "IFSC Code",
+          "visibleWhen": {
+            "field": "e_mandate_registration_mode",
+            "operator": "equals",
+            "value": "e_mandate"
+          },
+          "validation": { "required": true }
+        },
+        {
+          "id": "emandate_account_holder",
+          "type": "text",
+          "label": "Account Holder Name",
+          "visibleWhen": {
+            "field": "e_mandate_registration_mode",
+            "operator": "equals",
+            "value": "e_mandate"
+          },
+          "validation": { "required": true }
+        }
+      ]
+    }
+  ]
+
+  
+}

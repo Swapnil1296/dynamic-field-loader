@@ -605,6 +605,133 @@ If it parses without error, the JSON is valid.
 | `optionsMap` without `dependsOn` | Dependent dropdown empty | Add `"dependsOn": ["parent_field_id"]` |
 | Product/channel codes don't match DB row | API returns 404 | Keys in `form_configurations` must match UI dropdown values |
 | Trailing comma in JSON | Parse error | Remove last comma in arrays/objects |
+| Two separate `radio` fields for one choice | Neither works as a group | Use **one** `radio` field with `options` array (see §13) |
+
+---
+
+## 13. Pattern: radio choice opens extra fields (E-Mandate example)
+
+### Always show the two mandate options (no dependency)
+
+Remove `visibleWhen` from the **section** and do **not** put `visibleWhen` on the radio field. Use one `radio` field with two `options`:
+
+```json
+{
+  "id": "e_mandate_section",
+  "label": "Select E-Mandate Registration Mode",
+  "fields": [
+    {
+      "id": "e_mandate_registration_mode",
+      "type": "radio",
+      "label": "Registration Mode",
+      "validation": { "required": true },
+      "options": [
+        { "label": "E-Mandate", "value": "e_mandate" },
+        { "label": "Physical Mandate", "value": "physical_mandate" }
+      ]
+    }
+  ]
+}
+```
+
+No `visibleWhen` anywhere on the section or radio field = **always visible** on every product/channel/sub-channel.
+
+Child fields (bank account, IFSC, etc.) can still use `visibleWhen` on `e_mandate_registration_mode` if you only want those when E-Mandate is selected.
+
+### Wrong approach (do not do this)
+
+Two separate radio-type fields does **not** create a radio group — each is independent and has no `options`:
+
+```json
+// WRONG — will not work
+{ "id": "e_mandate", "type": "radio", "label": "E-Mandate" },
+{ "id": "physical_mandate", "type": "radio", "label": "Physical Mandate" }
+```
+
+### Correct approach
+
+Use **one** `radio` field with an `options` array. Add child fields with `visibleWhen` pointing to that field's `id` and the selected `value`.
+
+**Flow (when section has no `visibleWhen`):**
+1. Form loads → E-Mandate / Physical Mandate radio is **always** shown
+2. User selects `e_mandate` → 3 bank fields appear (if they have `visibleWhen`)
+3. User selects `physical_mandate` → bank fields hide
+
+**Flow (optional — only if you add section `visibleWhen`):**
+1. User selects Payment Method = `direct_debit` → section appears
+
+```json
+{
+  "id": "e_mandate_section",
+  "label": "Select E-Mandate Registration Mode",
+  "fields": [
+    {
+      "id": "e_mandate_registration_mode",
+      "type": "radio",
+      "label": "Registration Mode",
+      "validation": { "required": true },
+      "options": [
+        { "label": "E-Mandate", "value": "e_mandate" },
+        { "label": "Physical Mandate", "value": "physical_mandate" }
+      ],
+      "defaultValue": "e_mandate"
+    },
+    {
+      "id": "emandate_bank_account",
+      "type": "text",
+      "label": "Bank Account Number",
+      "visibleWhen": {
+        "field": "e_mandate_registration_mode",
+        "operator": "equals",
+        "value": "e_mandate"
+      },
+      "validation": { "required": true, "minLength": 9, "maxLength": 18 }
+    },
+    {
+      "id": "emandate_ifsc",
+      "type": "text",
+      "label": "IFSC Code",
+      "visibleWhen": {
+        "field": "e_mandate_registration_mode",
+        "operator": "equals",
+        "value": "e_mandate"
+      },
+      "validation": { "required": true }
+    },
+    {
+      "id": "emandate_account_holder",
+      "type": "text",
+      "label": "Account Holder Name",
+      "visibleWhen": {
+        "field": "e_mandate_registration_mode",
+        "operator": "equals",
+        "value": "e_mandate"
+      },
+      "validation": { "required": true }
+    }
+  ]
+}
+```
+
+Also add `direct_debit` to the payment method dropdown:
+
+```json
+{
+  "id": "payment_method",
+  "type": "select",
+  "label": "Payment Method",
+  "options": [
+    { "label": "Card", "value": "card" },
+    { "label": "Direct Debit (E-Mandate)", "value": "direct_debit" }
+  ]
+}
+```
+
+**Key rules:**
+- Section `visibleWhen` → controls when the whole block appears
+- Field `visibleWhen` with `"field": "e_mandate_registration_mode"` → reacts to radio selection
+- `"value": "e_mandate"` must match the `value` in `options`, not the label
+- Each child field needs a **unique** `id`
 
 ---
 

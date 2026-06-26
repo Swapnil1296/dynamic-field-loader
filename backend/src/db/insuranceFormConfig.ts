@@ -98,6 +98,7 @@ export const insuranceProposalFormConfig: FormConfiguration = {
             { label: 'Net Banking', value: 'net_banking' },
             { label: 'UPI', value: 'upi' },
             { label: 'Bank Transfer', value: 'bank_transfer' },
+            { label: 'Direct Debit (E-Mandate)', value: 'direct_debit' },
           ],
         },
         {
@@ -132,6 +133,63 @@ export const insuranceProposalFormConfig: FormConfiguration = {
             value: 'upi',
           },
           validation: { required: true },
+        },
+      ],
+    },
+    {
+      id: 'e_mandate_section',
+      label: 'Select E-Mandate Registration Mode',
+      fields: [
+        {
+          id: 'e_mandate_registration_mode',
+          type: 'radio',
+          label: 'Registration Mode',
+          validation: { required: true },
+          options: [
+            { label: 'E-Mandate', value: 'e_mandate' },
+            { label: 'Physical Mandate', value: 'physical_mandate' },
+          ],
+          defaultValue: 'e_mandate',
+        },
+        {
+          id: 'emandate_bank_account',
+          type: 'text',
+          label: 'Bank Account Number',
+          placeholder: 'Enter account number',
+          visibleWhen: {
+            field: 'e_mandate_registration_mode',
+            operator: 'equals',
+            value: 'e_mandate',
+          },
+          validation: { required: true, minLength: 9, maxLength: 18 },
+        },
+        {
+          id: 'emandate_ifsc',
+          type: 'text',
+          label: 'IFSC Code',
+          placeholder: 'e.g. HDFC0001234',
+          visibleWhen: {
+            field: 'e_mandate_registration_mode',
+            operator: 'equals',
+            value: 'e_mandate',
+          },
+          validation: {
+            required: true,
+            pattern: '^[A-Z]{4}0[A-Z0-9]{6}$',
+            patternMessage: 'Enter a valid IFSC code',
+          },
+        },
+        {
+          id: 'emandate_account_holder',
+          type: 'text',
+          label: 'Account Holder Name',
+          placeholder: 'As per bank records',
+          visibleWhen: {
+            field: 'e_mandate_registration_mode',
+            operator: 'equals',
+            value: 'e_mandate',
+          },
+          validation: { required: true, minLength: 2 },
         },
       ],
     },
